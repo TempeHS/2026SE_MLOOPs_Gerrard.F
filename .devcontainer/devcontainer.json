@@ -43,7 +43,8 @@
           "html": false,
           "css": false,
           "sql": false
-        }
+        },
+        "chat.agent.enabled": false
       },
       "extensions": [
         "bierner.markdown-mermaid",
@@ -69,7 +70,7 @@
         "streetsidesoftware.code-spell-checker",
         "tal7aouy.icons",
         "saeris.markdown-github-alerts",
-        "yy0931.vscode-sqlite3-editor"  
+        "yy0931.vscode-sqlite3-editor"
       ]
     }
   },
