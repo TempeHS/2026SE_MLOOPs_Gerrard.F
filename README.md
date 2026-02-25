@@ -28,19 +28,20 @@ To implement MLOps, a team will progress through three levels of automation.
 Students should document the design phase in the [Design Jupyter Notbook](/workspaces/Practical-Application-of-NESA-Software-Engineering-MLOps/1.Design/Design.ipynb).
 
 1. Defining the business problem to be solved
-
    - [Sales Force Health Cloud](https://www.salesforce.com/au/products/health-cloud/overview/) is one of the largest medical CRMs in Australia. Sales Force has identified an opportunity to expand their medical product to incorporate medical forecasting for patients using AI/ML models. In Australia, Diabetes prevalence has slowly increased over the last twenty years, from 3.3% in 2001 to 5.3% in 2022. Sales Force background research has identified that Doctors often underestimate the progress of type II adult-onset diabetes after diagnosis. Often resulting in insufficient medical interventions and reduced health outcomes for patients. Sales Force has approached you as a Data Engineer to develop a PoC diabetes forecasting service for doctors to provide a valid and reliable prediction of the disease progression over the patient's next 12 months based on data in a patient's CRM record.
 
 2. Refactoring the business problem into a machine learning problem
+   - Logistic Regression can be used with multiple features such as medication habits as binary, current health as a statistic, comparison from previous check in to now as binary (better or worse) and other necessary measures such as blood pressure which can then be accumulated to determine a class of either increasing or decreasing health. This can be a model combined with a multiple feature linear regression model of the patient's health measurements to give a larger insight on the patient's health to find out any underlying issues that the logistic regression misses.
 
-   - _Students to refactor the provided business problem_
+   - Use available data from CRM with multiple features to output the most sufficient model then use new data to predict values, measure loss and then re-evaluate model if loss is too large. Output data must be interpretable for end users.
 
 3. Defining success metrics
-
-   - _Students to define success metrics_
+   - Interpretable data for doctors and patients
+   - Data is ethically adjusted
+   - Accurate measurement of disease progression
+   - Data is able to integrate into CRM files
 
 4. Researching available data.
-
    - Sales Force have sourced and provided a validated raw data set. The data is saved in the CSV file [2.1.2.Diabeties_Sample_Data.csv](/2.Model_Development/2.1.Data_Wrangling/2.1.2.Diabeties_Sample_Data.csv).
 
      > [!Important]
