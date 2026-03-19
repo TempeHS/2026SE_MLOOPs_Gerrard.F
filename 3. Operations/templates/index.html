@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MMR classification</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='images/logo.png') }}"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="{{ url_for('static', filename='images/logo.png') }}"
+    />
     <style>
       body {
         font-family: Calibri, sans-serif;
@@ -14,13 +23,27 @@
         align-items: flex-start;
         padding: 2rem;
         box-sizing: border-box;
+        position: relative;
+        overflow-x: hidden;
+        background: #0f1720;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: -12px;
         background-image: url("{{ url_for('static', filename='images/bg.jpg') }}");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
+        filter: blur(6px);
+        transform: scale(1.03);
+        z-index: -1;
       }
 
       .page {
+        position: relative;
+        z-index: 1;
         display: flex;
         justify-content: center;
         align-items: flex-start;
@@ -67,13 +90,6 @@
         display: block;
         margin-top: 0.75rem;
         font-weight: 600;
-      }
-
-      .optional-label {
-        font-weight: 400;
-        color: #888;
-        font-size: 0.85rem;
-        margin-left: 0.4rem;
       }
 
       input,
@@ -189,6 +205,9 @@
       .popup-text {
         margin: 0.5rem 0 1rem 0;
         color: #333;
+        font-family: Calibri, sans-serif;
+        white-space: pre-line;
+        line-height: 1.35;
       }
 
       .popup-rank-image {
@@ -327,6 +346,20 @@
         "Radiant",
       ];
 
+      const rankImageBase = "{{ url_for('static', filename='images/ranks') }}";
+      const rankImageMap = {
+        Unranked: "unranked.png",
+        Iron: "iron.png",
+        Bronze: "bronze.png",
+        Silver: "silver.png",
+        Gold: "gold.png",
+        Platinum: "platinum.png",
+        Diamond: "diamond.png",
+        Ascendant: "ascendant.png",
+        Immortal: "immortal.png",
+        Radiant: "radiant.png",
+      };
+
       function clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
       }
@@ -351,8 +384,17 @@
       }
 
       function showRankPopup(currentRank, predictedRank, predictedWinPct) {
-        rankPopupText.textContent = `Current rank: ${currentRank} | Predicted rank: ${predictedRank} | Predicted win%: ${predictedWinPct.toFixed(2)}%`;
-        rankPopupImage.src = `/static/images/ranks/${predictedRank.toLowerCase()}.png`;
+        rankPopupText.textContent =
+          `Current rank: ${currentRank}\n` +
+          `Predicted rank: ${predictedRank}\n` +
+          `Predicted win%: ${predictedWinPct.toFixed(2)}%`;
+
+        const fileName = rankImageMap[predictedRank] || "default.png";
+        rankPopupImage.onerror = () => {
+          rankPopupImage.onerror = null;
+          rankPopupImage.src = `${rankImageBase}/default.png`;
+        };
+        rankPopupImage.src = `${rankImageBase}/${fileName}`;
         rankPopup.style.display = "flex";
       }
 
@@ -431,7 +473,9 @@
           }
 
           if (rank !== "Unranked") {
-            const predictedRank = getPredictedRank(rank, data.predicted_value);
+            const predictedRank =
+              data.predicted_rank ||
+              getPredictedRank(rank, data.predicted_value);
             if (predictedRank) {
               showRankPopup(rank, predictedRank, data.predicted_value);
             }
