@@ -28,67 +28,90 @@ app = Flask(__name__)
 app.secret_key = b"_53oi3uriq9pifpff;apl"
 csrf = CSRFProtect(app)
 
-# Load your model
+# Load your model (os-based, robust path)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "polynomial_model.sav")
+
 try:
-    with open("model.pkl", "rb") as f:
+    with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
-    app.logger.critical("Model loaded successfully")
+
+    if not hasattr(model, "predict"):
+        raise TypeError("Loaded object does not have predict().")
+
+    app.logger.critical(f"Model loaded successfully from: {MODEL_PATH}")
 except Exception as e:
-    app.logger.critical(f"Failed to load model: {str(e)}")
+    app.logger.critical(f"Failed to load model from {MODEL_PATH}: {str(e)}")
     model = None
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return render_template("index.html")
 
 
 # ...existing code...
 
+# Keep this order exactly the same as training FEATURE_COLS
+FEATURE_NAMES = ["k/d", "matchs_played"]
+TARGET_LABEL = "win%"
 
-# API endpoint for model predictions
+
 @app.route("/api/predict", methods=["POST"])
 @csrf.exempt
 def predict():
-    """
-    API endpoint to get predictions from your model
-    Expects JSON input with features
-    """
     try:
         if model is None:
             return jsonify({"error": "Model not loaded"}), 500
 
-        # Get JSON data from request
-        data = request.get_json()
-
-        if not data:
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
             return jsonify({"error": "No JSON data provided"}), 400
 
-        # Extract features - adjust based on your model's input
         features = data.get("features", [])
+        if not isinstance(features, list) or len(features) != len(FEATURE_NAMES):
+            return (
+                jsonify(
+                    {
+                        "error": f"Expected {len(FEATURE_NAMES)} features in this order: {FEATURE_NAMES}"
+                    }
+                ),
+                400,
+            )
 
-        if not features:
-            return jsonify({"error": "Missing 'features' in request"}), 400
+        # Strict numeric parsing
+        try:
+            numeric_features = [float(v) for v in features]
+        except (TypeError, ValueError):
+            return jsonify({"error": "All features must be numeric"}), 400
 
-        # Convert to numpy array and reshape if needed
-        X = np.array(features).reshape(1, -1)
+        X = np.array(numeric_features, dtype=float).reshape(1, -1)
 
-        # Make prediction
-        prediction = model.predict(X)
+        try:
+            prediction = model.predict(X)
+        except ValueError as e:
+            return (
+                jsonify(
+                    {"error": "Model input shape/type mismatch", "details": str(e)}
+                ),
+                400,
+            )
 
-        # Log the prediction
-        app.logger.critical(f"Prediction made: {prediction}")
-
-        return jsonify({"prediction": prediction.tolist(), "status": "success"}), 200
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "target": TARGET_LABEL,
+                    "predicted_value": float(prediction[0]),
+                    "feature_order": FEATURE_NAMES,
+                }
+            ),
+            200,
+        )
 
     except Exception as e:
         app.logger.critical(f"Prediction error: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-
-# Test endpoint
-@app.route("/api/health", methods=["GET"])
-def health():
-    """Check if API and model are running"""
-    return jsonify({"status": "healthy", "model_loaded": model is not None}), 200
-
-
-# ...existing code...
+        return jsonify({"error": "Internal server error"}), 500
 
 
 if __name__ == "__main__":
