@@ -32,7 +32,7 @@ csrf = CSRFProtect(app)
 
 # Load model
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "polynomial_model.sav")
+MODEL_PATH = os.path.join(BASE_DIR, "multi_linear_model.sav")
 
 try:
     with open(MODEL_PATH, "rb") as f:
@@ -154,7 +154,10 @@ def predict():
                 400,
             )
 
+        # Predict and clamp to valid domain [0, 100]
         predicted_value = float(prediction[0])
+        predicted_value = np.clip(predicted_value, 0, 100)
+
         mmr_class = classify_mmr(predicted_value)
         plots = build_plots(numeric_features, predicted_value)
 
