@@ -94,8 +94,8 @@ def build_plots(numeric_features: list, predicted_value: float) -> list:
     ax.axvline(0, color="#888", linestyle="--", linewidth=1)
     ax.axhline(predicted_value, color="#2ecc71", linestyle="--", linewidth=1)
 
-    ax.set_title(f"Integrated Feature Sensitivity ({TARGET_LABEL})", fontsize=12)
-    ax.set_xlabel("Feature change from your input (%)", fontsize=10)
+    ax.set_title(f"Performance against Player-base ({TARGET_LABEL})", fontsize=12)
+    ax.set_xlabel("Features", fontsize=10)
     ax.set_ylabel(TARGET_LABEL, fontsize=10)
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize=8)
@@ -107,7 +107,7 @@ def build_plots(numeric_features: list, predicted_value: float) -> list:
     img_b64 = base64.b64encode(buf.read()).decode("utf-8")
     plt.close(fig)
 
-    return [{"feature": "Integrated sensitivity", "image": img_b64}]
+    return [{"feature": "Performance against Player-base", "image": img_b64}]
 
 
 @app.route("/", methods=["GET"])
