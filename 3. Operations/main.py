@@ -15,7 +15,7 @@ import io
 import base64
 import matplotlib
 
-matplotlib.use("Agg")  # must be before pyplot import
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 app_log = logging.getLogger(__name__)
@@ -30,7 +30,6 @@ app = Flask(__name__)
 app.secret_key = b"_53oi3uriq9pifpff;apl"
 csrf = CSRFProtect(app)
 
-# Load model
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "multi_linear_model.sav")
 
@@ -44,11 +43,9 @@ except Exception as e:
     app.logger.critical(f"Failed to load model from {MODEL_PATH}: {str(e)}")
     model = None
 
-# Feature config — must match training order
 FEATURE_NAMES = ["k/d", "matchs_played", "headshot_%", "dmg/rnd"]
 TARGET_LABEL = "win%"
 
-# MMR thresholds — adjust to match your data distribution
 MMR_THRESHOLDS = {
     "high": {"min": 70, "label": "High MMR", "detail": "Performing above average"},
     "medium": {"min": 45, "label": "Average MMR", "detail": "Performing at average"},
@@ -57,7 +54,6 @@ MMR_THRESHOLDS = {
 
 
 def classify_mmr(predicted_win_pct: float) -> dict:
-    """Classify predicted win% into an MMR tier."""
     if predicted_win_pct >= MMR_THRESHOLDS["high"]["min"]:
         return MMR_THRESHOLDS["high"]
     elif predicted_win_pct >= MMR_THRESHOLDS["medium"]["min"]:
@@ -67,18 +63,14 @@ def classify_mmr(predicted_win_pct: float) -> dict:
 
 
 def build_plots(numeric_features: list, predicted_value: float) -> list:
-    """Generate one integrated base64 plot with all feature sensitivities."""
     fig, ax = plt.subplots(figsize=(7, 4.5))
-
-    # Common x-axis: percent change from user input
-    pct_change = np.linspace(-0.5, 0.5, 200)  # -50% to +50%
+    pct_change = np.linspace(-0.5, 0.5, 200)
 
     for i, feature_name in enumerate(FEATURE_NAMES):
         X_sweep = np.tile(numeric_features, (len(pct_change), 1)).astype(float)
 
         base_val = float(numeric_features[i])
         if base_val == 0:
-            # If base is zero, use small absolute sweep around zero
             sweep_vals = np.linspace(-1.0, 1.0, len(pct_change))
             X_sweep[:, i] = sweep_vals
         else:
@@ -87,7 +79,6 @@ def build_plots(numeric_features: list, predicted_value: float) -> list:
         y_sweep = model.predict(X_sweep)
         ax.plot(pct_change * 100, y_sweep, linewidth=2, label=feature_name)
 
-    # Mark the user's current prediction at 0% change
     ax.scatter(
         [0], [predicted_value], color="#e24a4a", zorder=6, label="Your prediction"
     )
@@ -154,7 +145,6 @@ def predict():
                 400,
             )
 
-        # Predict and clamp to valid domain [0, 100]
         predicted_value = float(prediction[0])
         predicted_value = np.clip(predicted_value, 0, 100)
 
